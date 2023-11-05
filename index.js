@@ -38,6 +38,11 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/allBlogs", async (req, res) => {
+      const result = await allBlogsCollection.find().toArray();
+      res.send(result);
+    });
+
     app.post("/allBlogs", async (req, res) => {
       const data = req.body;
       console.log(data);
