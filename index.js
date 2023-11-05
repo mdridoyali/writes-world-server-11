@@ -38,6 +38,13 @@ async function run() {
       res.send(result);
     });
 
+    // for home page
+    app.get('/blogsForHome', async (req, res) => {
+      const result = await allBlogsCollection.find().sort({ timestamp: -1 }).limit(6).toArray();
+      res.send(result);
+    });
+
+    // for all blog page
     app.get('/allBlogs', async (req, res) => {
       const title = req.query.title || ''; 
       const category = req.query.category || 'All'; 
@@ -59,6 +66,7 @@ async function run() {
       const result = await allBlogsCollection.insertOne(data)
       res.send(result);
     });
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
