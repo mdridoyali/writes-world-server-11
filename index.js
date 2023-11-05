@@ -38,11 +38,21 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/allBlogs", async (req, res) => {
-      const result = await allBlogsCollection.find().toArray();
-      res.send(result);
-    });
+    app.get('/allBlogs', async (req, res) => {
+      const title = req.query.title || ''; 
+      const category = req.query.category || 'All'; 
 
+      const query = {};
+      if (title) {
+        query.title = new RegExp(title, 'i'); 
+      }
+      if (category !== 'All') {
+        query.category = category;
+      }
+      const blogs = await allBlogsCollection.find(query).toArray();
+      res.send(blogs);
+    });
+    
     app.post("/allBlogs", async (req, res) => {
       const data = req.body;
       console.log(data);
