@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -23,7 +23,9 @@ const client = new MongoClient(uri, {
 async function run() {
   const categoryCollection = client.db("ass_11_jwt").collection("category");
   const allBlogsCollection = client.db("ass_11_jwt").collection("allBlogs");
-  const wishlistCollection = client.db("ass_11_jwt").collection("wishlistBlogs");
+  const wishlistCollection = client
+    .db("ass_11_jwt")
+    .collection("wishlistBlogs");
 
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -39,61 +41,74 @@ async function run() {
       res.send(result);
     });
 
+    // get blogs for wishlist
+    app.get("/wishlistBlogs", async (req, res) => {
+      const email = req.query.email;
+      const query = {};
+      if (email) {
+        query.email = email;
+      }
+      const result = await wishlistCollection.find(query).toArray();
+      res.send(result);
+    });
     // for home page
-    app.get('/blogsForHome', async (req, res) => {
-      const result = await allBlogsCollection.find().sort({ postedTime: -1 }).limit(6).toArray();
-       // Extract and format the timestamp
-  const formattedResult = result.map((blog) => {
-    const postedTime = new Date(blog.postedTime);
-    const formattedPostedTime = postedTime.toLocaleString('en-US', {
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    });
-    return {
-      ...blog,
-      postedTime: formattedPostedTime,
-    };
-  });
+    app.get("/blogsForHome", async (req, res) => {
+      const result = await allBlogsCollection
+        .find()
+        .sort({ postedTime: -1 })
+        .limit(6)
+        .toArray();
+      const formattedResult = result.map((blog) => {
+        const postedTime = new Date(blog.postedTime);
+        const formattedPostedTime = postedTime.toLocaleString("en-US", {
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+        return {
+          ...blog,
+          postedTime: formattedPostedTime,
+        };
+      });
 
-  res.send(formattedResult);
+      res.send(formattedResult);
     });
-
     // for all blog page
-    app.get('/allBlogs', async (req, res) => {
-      const title = req.query.title || ''; 
-      const category = req.query.category || 'All'; 
-
+    app.get("/allBlogs", async (req, res) => {
+      const title = req.query.title || "";
+      const category = req.query.category || "All";
+      const id = req.query.id || "" ;
+      console.log(id)
       const query = {};
       if (title) {
-        query.title = new RegExp(title, 'i'); 
+        query.title = new RegExp(title, "i");
       }
-      if (category !== 'All') {
+      if (id) {
+        query._id = new ObjectId(id);
+      }
+      if (category !== "All") {
         query.category = category;
       }
       const blogs = await allBlogsCollection.find(query).toArray();
       res.send(blogs);
     });
-    
+
     // post all blogs
     app.post("/allBlogs", async (req, res) => {
       const data = req.body;
       console.log(data);
-      const result = await allBlogsCollection.insertOne(data)
+      const result = await allBlogsCollection.insertOne(data);
       res.send(result);
     });
 
     // post Wishlist blogs
-    app.post('/wishlistBlogs', async(req,res) => {
+    app.post("/wishlistBlogs", async (req, res) => {
       const blogs = req.body;
-      const result = await wishlistCollection.insertOne(blogs)
-      console.log(result)
-      res.send(result)
-    })
-
-
-
+      const result = await wishlistCollection.insertOne(blogs);
+      console.log(result);
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
