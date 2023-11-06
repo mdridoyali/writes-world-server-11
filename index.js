@@ -23,6 +23,7 @@ const client = new MongoClient(uri, {
 async function run() {
   const categoryCollection = client.db("ass_11_jwt").collection("category");
   const allBlogsCollection = client.db("ass_11_jwt").collection("allBlogs");
+  const wishlistCollection = client.db("ass_11_jwt").collection("wishlistBlogs");
 
   try {
     // Connect the client to the server	(optional starting in v4.7)
@@ -40,8 +41,23 @@ async function run() {
 
     // for home page
     app.get('/blogsForHome', async (req, res) => {
-      const result = await allBlogsCollection.find().sort({ timestamp: -1 }).limit(6).toArray();
-      res.send(result);
+      const result = await allBlogsCollection.find().sort({ postedTime: -1 }).limit(6).toArray();
+       // Extract and format the timestamp
+  const formattedResult = result.map((blog) => {
+    const postedTime = new Date(blog.postedTime);
+    const formattedPostedTime = postedTime.toLocaleString('en-US', {
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+    return {
+      ...blog,
+      postedTime: formattedPostedTime,
+    };
+  });
+
+  res.send(formattedResult);
     });
 
     // for all blog page
@@ -60,12 +76,23 @@ async function run() {
       res.send(blogs);
     });
     
+    // post all blogs
     app.post("/allBlogs", async (req, res) => {
       const data = req.body;
       console.log(data);
       const result = await allBlogsCollection.insertOne(data)
       res.send(result);
     });
+
+    // post Wishlist blogs
+    app.post('/wishlistBlogs', async(req,res) => {
+      const blogs = req.body;
+      const result = await wishlistCollection.insertOne(blogs)
+      console.log(result)
+      res.send(result)
+    })
+
+
 
   } finally {
     // Ensures that the client will close when you finish/error
