@@ -43,11 +43,8 @@ async function run() {
 
     // get blogs for wishlist
     app.get("/wishlistBlogs", async (req, res) => {
-      const email = req.query.email;
-      const query = {};
-      if (email) {
-        query.email = email;
-      }
+      const email = req.query?.email;
+      const query = {wishlist_email: email};
       const result = await wishlistCollection.find(query).toArray();
       res.send(result);
     });
@@ -76,34 +73,31 @@ async function run() {
       res.send(formattedResult);
     });
 
-    // for Details page
+    // for Details page /allBlogsCollection
     app.get("/detailsBlogs/:id", async (req, res) => {
       const id = req.params.id;
-      // console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await allBlogsCollection.findOne(query);
-      // console.log(result);
       res.send(result);
     });
-    // Details page for wishlist
+  // Details page for wishlist // wishlistCollection
     app.get("/detailsWishlist/:id", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const query = { _id: new ObjectId(id) };
       const result = await wishlistCollection.findOne(query);
-      console.log(result);
       res.send(result);
     });
 
-    // get data for details route
-    //  app.get("/product/:id", async (req, res) => {
-    //   const id = req.params.id;
-    //   const query = { _id: new ObjectId(id) };
-    //   const result = await productsCollection.findOne(query);
-    //   res.send(result);
-    // });
-
-    // for all blog page
+    // for Update page / wishlistCollection
+    app.get("/updateBlog/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await wishlistCollection.findOne(query);
+      console.log(id, result)
+      res.send(result);
+    });
+ 
+    // for all blog page / allBlogsCollection
     app.get("/allBlogs", async (req, res) => {
       const title = req.query.title || "";
       const category = req.query.category || "All";
@@ -135,7 +129,6 @@ async function run() {
     // post all blogs
     app.post("/allBlogs", async (req, res) => {
       const data = req.body;
-      console.log(data);
       const result = await allBlogsCollection.insertOne(data);
       res.send(result);
     });
@@ -144,16 +137,13 @@ async function run() {
     app.post("/wishlistBlogs", async (req, res) => {
       const blogs = req.body;
       const result = await wishlistCollection.insertOne(blogs);
-      console.log(result);
       res.send(result);
     });
 
     // delete wishlist
     app.delete("/wishlistBlogs", async (req, res) => {
       const id = req.params.id;
-      console.log(id);
       const result = await wishlistCollection.deleteOne(id) ;
-      console.log(result);
       res.send(result);
     });
 
