@@ -23,6 +23,9 @@ const client = new MongoClient(uri, {
 async function run() {
   const categoryCollection = client.db("ass_11_jwt").collection("category");
   const allBlogsCollection = client.db("ass_11_jwt").collection("allBlogs");
+  const allCommentsCollection = client
+    .db("ass_11_jwt")
+    .collection("allComments");
   const wishlistCollection = client
     .db("ass_11_jwt")
     .collection("wishlistBlogs");
@@ -40,6 +43,15 @@ async function run() {
       const result = await categoryCollection.find().toArray();
       res.send(result);
     });
+
+    //allCommentsCollection
+    app.get("/comments/:id", async (req, res) => {
+      const ids = req.params.id;
+      const query = { id: ids };
+      const result = await allCommentsCollection.find(query).toArray();
+      res.send(result);
+    });
+    
 
     // get blogs for wishlist / wishlistCollection
     app.get("/wishlistBlogs", async (req, res) => {
@@ -140,6 +152,15 @@ async function run() {
       res.send(result);
     });
 
+    // Comment Collection for all
+    app.post("/allComment", async (req, res) => {
+      const comment = req.body;
+      console.log(comment);
+      const result = await allCommentsCollection.insertOne(comment);
+      console.log(result);
+      res.send(result);
+    });
+
     // delete wishlist
     app.delete("/wishlistBlogs", async (req, res) => {
       const id = req.params.id;
@@ -161,7 +182,7 @@ async function run() {
           category: blog.category,
           long_desc: blog.long_desc,
           email: blog.email,
-          postedTime: blog.postedTime
+          postedTime: blog.postedTime,
         },
       };
       const result = await allBlogsCollection.updateOne(
@@ -169,7 +190,7 @@ async function run() {
         updateBlog,
         options
       );
-      console.log(id, blog , result)
+      console.log(id, blog, result);
       res.send(result);
     });
 
@@ -187,7 +208,7 @@ async function run() {
           category: blog.category,
           long_desc: blog.long_desc,
           email: blog.email,
-          postedTime: blog.postedTime
+          postedTime: blog.postedTime,
         },
       };
       const result = await wishlistCollection.updateOne(
@@ -195,13 +216,9 @@ async function run() {
         updateBlog,
         options
       );
-      console.log(id, blog , result)
+      console.log(id, blog, result);
       res.send(result);
     });
-
-
-
-
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
