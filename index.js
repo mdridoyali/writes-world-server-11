@@ -44,7 +44,7 @@ async function run() {
     // get blogs for wishlist
     app.get("/wishlistBlogs", async (req, res) => {
       const email = req.query?.email;
-      const query = {wishlist_email: email};
+      const query = { wishlist_email: email };
       const result = await wishlistCollection.find(query).toArray();
       res.send(result);
     });
@@ -80,7 +80,7 @@ async function run() {
       const result = await allBlogsCollection.findOne(query);
       res.send(result);
     });
-  // Details page for wishlist // wishlistCollection
+    // Details page for wishlist // wishlistCollection
     app.get("/detailsWishlist/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -93,10 +93,10 @@ async function run() {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await wishlistCollection.findOne(query);
-      console.log(id, result)
+      console.log(id, result);
       res.send(result);
     });
- 
+
     // for all blog page / allBlogsCollection
     app.get("/allBlogs", async (req, res) => {
       const title = req.query.title || "";
@@ -143,11 +143,35 @@ async function run() {
     // delete wishlist
     app.delete("/wishlistBlogs", async (req, res) => {
       const id = req.params.id;
-      const result = await wishlistCollection.deleteOne(id) ;
+      const result = await wishlistCollection.deleteOne(id);
       res.send(result);
     });
 
-
+    // update blog
+    app.put("/updateBlog/:id", async (req, res) => {
+      const id = req.params.id;
+      const blog = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateBlog = {
+        $set: {
+          title: blog.title,
+          image: blog.image,
+          short_desc: blog.short_desc,
+          category: blog.category,
+          long_desc: blog.long_desc,
+          email: blog.email,
+          postedTime: blog.postedTime
+        },
+      };
+      const result = await allBlogsCollection.updateOne(
+        filter,
+        updateBlog,
+        options
+      );
+      console.log(id, blog , result)
+      res.send(result);
+    });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
