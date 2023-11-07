@@ -41,14 +41,14 @@ async function run() {
       res.send(result);
     });
 
-    // get blogs for wishlist
+    // get blogs for wishlist / wishlistCollection
     app.get("/wishlistBlogs", async (req, res) => {
       const email = req.query?.email;
       const query = { wishlist_email: email };
       const result = await wishlistCollection.find(query).toArray();
       res.send(result);
     });
-    // for home page
+    // for home page / allBlogsCollection
     app.get("/blogsForHome", async (req, res) => {
       const result = await allBlogsCollection
         .find()
@@ -172,6 +172,36 @@ async function run() {
       console.log(id, blog , result)
       res.send(result);
     });
+
+    // update blog for wishList
+    app.put("/updateBlogWishlist/:id", async (req, res) => {
+      const id = req.params.id;
+      const blog = req.body;
+      const filter = { _id: new ObjectId(id) };
+      const options = { upsert: true };
+      const updateBlog = {
+        $set: {
+          title: blog.title,
+          image: blog.image,
+          short_desc: blog.short_desc,
+          category: blog.category,
+          long_desc: blog.long_desc,
+          email: blog.email,
+          postedTime: blog.postedTime
+        },
+      };
+      const result = await wishlistCollection.updateOne(
+        filter,
+        updateBlog,
+        options
+      );
+      console.log(id, blog , result)
+      res.send(result);
+    });
+
+
+
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
