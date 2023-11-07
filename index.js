@@ -61,10 +61,11 @@ async function run() {
       const formattedResult = result.map((blog) => {
         const postedTime = new Date(blog.postedTime);
         const formattedPostedTime = postedTime.toLocaleString("en-US", {
+          year: "2-digit",
+          month: "2-digit",
           day: "2-digit",
           hour: "2-digit",
           minute: "2-digit",
-          second: "2-digit",
         });
         return {
           ...blog,
@@ -74,24 +75,61 @@ async function run() {
 
       res.send(formattedResult);
     });
+
+    // for Details page
+    app.get("/detailsBlogs/:id", async (req, res) => {
+      const id = req.params.id;
+      // console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await allBlogsCollection.findOne(query);
+      // console.log(result);
+      res.send(result);
+    });
+    // Details page for wishlist
+    app.get("/detailsWishlist/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const query = { _id: new ObjectId(id) };
+      const result = await wishlistCollection.findOne(query);
+      console.log(result);
+      res.send(result);
+    });
+
+    // get data for details route
+    //  app.get("/product/:id", async (req, res) => {
+    //   const id = req.params.id;
+    //   const query = { _id: new ObjectId(id) };
+    //   const result = await productsCollection.findOne(query);
+    //   res.send(result);
+    // });
+
     // for all blog page
     app.get("/allBlogs", async (req, res) => {
       const title = req.query.title || "";
       const category = req.query.category || "All";
-      const id = req.query.id || "" ;
-      console.log(id)
       const query = {};
       if (title) {
         query.title = new RegExp(title, "i");
       }
-      if (id) {
-        query._id = new ObjectId(id);
-      }
       if (category !== "All") {
         query.category = category;
       }
-      const blogs = await allBlogsCollection.find(query).toArray();
-      res.send(blogs);
+      const result = await allBlogsCollection.find(query).toArray();
+      const formattedResult = result.map((blog) => {
+        const postedTime = new Date(blog.postedTime);
+        const formattedPostedTime = postedTime.toLocaleString("en-US", {
+          year: "2-digit",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+        return {
+          ...blog,
+          postedTime: formattedPostedTime,
+        };
+      });
+      res.send(formattedResult);
     });
 
     // post all blogs
@@ -109,6 +147,17 @@ async function run() {
       console.log(result);
       res.send(result);
     });
+
+    // delete wishlist
+    app.delete("/wishlistBlogs", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const result = await wishlistCollection.deleteOne(id) ;
+      console.log(result);
+      res.send(result);
+    });
+
+
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
