@@ -51,7 +51,6 @@ async function run() {
       const result = await allCommentsCollection.find(query).toArray();
       res.send(result);
     });
-    
 
     // get blogs for wishlist / wishlistCollection
     app.get("/wishlistBlogs", async (req, res) => {
@@ -81,7 +80,6 @@ async function run() {
           postedTime: formattedPostedTime,
         };
       });
-
       res.send(formattedResult);
     });
 
@@ -106,6 +104,20 @@ async function run() {
       const query = { _id: new ObjectId(id) };
       const result = await wishlistCollection.findOne(query);
       console.log(id, result);
+      res.send(result);
+    });
+
+    // for featured Post / allBlogsCollection
+    app.get("/tenBlogs", async (req, res) => {
+      options = {
+        projection: { title: 1, photoURL: 1, displayName: 0, long_desc: 1, _id: 0 },
+      };
+      const result = await allBlogsCollection
+        .find({})
+        .project({ title: 1, photoURL: 1, displayName: 1, long_desc: 1, _id: 1 })
+        .sort({ long_desc: 1 })
+        .limit(10)
+        .toArray();
       res.send(result);
     });
 
@@ -182,6 +194,8 @@ async function run() {
           category: blog.category,
           long_desc: blog.long_desc,
           email: blog.email,
+          photoURL: blog.photoURL,
+          displayName: blog.displayName,
           postedTime: blog.postedTime,
         },
       };
