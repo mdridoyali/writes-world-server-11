@@ -10,7 +10,7 @@ const port = process.env.PORT || 5000;
 // middleWare
 app.use(
   cors({
-    origin: ["https://assignment-11-jwt-server.vercel.app", "http://localhost:5173/"],
+    origin: ["https://ass-11-jwt.web.app" , 'https://ass-11-jwt.firebaseapp.com'],
     credentials: true,
   })
 );
@@ -111,16 +111,16 @@ async function run() {
     });
 
     // get blogs for wishlist / wishlistCollection
-    app.get("/wishlistBlogs", logger, verifyToken, async (req, res) => {
+    app.get("/wishlistBlogs",  async (req, res) => {
       const email = req.query?.email;
-      // const query = { wishlist_email: email };
-      if (req.user.email !== req.query.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      let query = {};
-      if (req.query?.email) {
-        query = { email: req.query.email };
-      }
+      const query = { wishlist_email: email };
+      // if (req.user.email !== req.query.email) {
+      //   return res.status(403).send({ message: "forbidden access" });
+      // }
+      // let query = {};
+      // if (req.query?.email) {
+      //   query = { email: req.query.email };
+      // }
       const result = await wishlistCollection.find(query).toArray();
       res.send(result);
     });
@@ -201,7 +201,7 @@ async function run() {
     });
 
     // for all blog page / allBlogsCollection
-    app.get("/allBlogs", logger, verifyToken, async (req, res) => {
+    app.get("/allBlogs", async (req, res) => {
       const title = req.query.title || "";
       const category = req.query.category || "All";
       if (req.user?.email !== req.query?.email) {
