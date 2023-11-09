@@ -1,7 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const cookieParser = require('cookie-parser');;
+const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 const app = express();
@@ -10,13 +10,16 @@ const port = process.env.PORT || 5000;
 // middleWare
 app.use(
   cors({
-    origin: ["https://ass-11-jwt.web.app" , 'https://ass-11-jwt.firebaseapp.com'],
+    origin: [
+      "http://localhost:5173",
+      "https://ass-11-jwt.web.app",
+      "https://ass-11-jwt.firebaseapp.com",
+    ],
     credentials: true,
   })
 );
 app.use(express.json());
 app.use(cookieParser());
-
 
 // json middleware
 const logger = (req, res, next) => {
@@ -26,7 +29,7 @@ const logger = (req, res, next) => {
 
 const verifyToken = (req, res, next) => {
   const token = req?.cookies?.token;
-  console.log('token in middleware', token)
+  console.log("token in middleware", token);
   if (!token) {
     return res.status(401).send({ message: "unauthorized access" });
   }
@@ -38,8 +41,6 @@ const verifyToken = (req, res, next) => {
     next();
   });
 };
-
-
 
 const uri = `mongodb+srv://${process.env.ASS_DB_USER}:${process.env.ASS_DB_PASS}@cluster0.w9fev91.mongodb.net/?retryWrites=true&w=majority`;
 
@@ -68,34 +69,37 @@ async function run() {
     // await client.connect();
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
-    // console.log(
-    //   "Pinged your deployment. You successfully connected to MongoDB!"
-    // );
+    console.log(
+      "Pinged your deployment. You successfully connected to MongoDB!"
+    );
 
-        //  Api for Auth
-        app.post("/jwtS", logger, async (req, res) => {
-          const user = req.body;
-          console.log(user);
-          const token = jwt.sign(user, process.env.TOKEN_SECRET, {
-            expiresIn: "1h",
-          });
-          console.log(token)
-          res
-            .cookie("token", token, {
-              httpOnly: true,
-              secure: true,
-              sameSite: "none",
-            })
-            .send({ success: true });
-        });
+    //  Api for Auth
+    app.post("/jwtS", logger, async (req, res) => {
+      const user = req.body;
+      console.log(user);
+      const token = jwt.sign(user, process.env.TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      console.log(token);
+      res
+        .cookie("token", token, {
+          httpOnly: false,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+        })
+        .send({ success: true });
+      // .cookie("token", token, {
+      //   httpOnly: true,
+      //   secure: true,
+      //   sameSite: "none",
+      // })
+    });
 
-        app.post("/logout", logger, async (req, res) => {
-          const user = req.body;
-          console.log("logout", user);
-          res.clearCookie("token", { maxAge: 0 }).send({ success: true });
-        });
-    
-
+    app.post("/logout", logger, async (req, res) => {
+      const user = req.body;
+      console.log("logout", user);
+      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+    });
 
     app.get("/category", async (req, res) => {
       const result = await categoryCollection.find().toArray();
@@ -111,7 +115,7 @@ async function run() {
     });
 
     // get blogs for wishlist / wishlistCollection
-    app.get("/wishlistBlogs",  async (req, res) => {
+    app.get("/wishlistBlogs", logger, verifyToken, async (req, res) => {
       const email = req.query?.email;
       const query = { wishlist_email: email };
       // if (req.user.email !== req.query.email) {
@@ -124,7 +128,6 @@ async function run() {
       const result = await wishlistCollection.find(query).toArray();
       res.send(result);
     });
-
 
     // for home page / allBlogsCollection
     app.get("/blogsForHome", async (req, res) => {
@@ -176,25 +179,25 @@ async function run() {
 
     // for featured Post / allBlogsCollection
     app.get("/tenBlogs", async (req, res) => {
-      options = {
-        projection: {
-          title: 1,
-          photoURL: 1,
-          displayName: 0,
-          long_desc: 1,
-          _id: 0,
-        },
-      };
+      // options = {
+      //   projection: {
+      //     title: 1,
+      //     photoURL: 1,
+      //     displayName: 1,
+      //     long_desc: 1,
+      //     _id: 0,
+      //   },
+      // };
       const result = await allBlogsCollection
-        .find({})
+        .find()
         .project({
           title: 1,
           photoURL: 1,
           displayName: 1,
           long_desc: 1,
-          _id: 1,
+          _id: 0,
         })
-        .sort({ long_desc: 1 })
+        .sort({ long_desc: -1 })
         .limit(10)
         .toArray();
       res.send(result);
@@ -236,14 +239,14 @@ async function run() {
     });
 
     // post all blogs
-    app.post("/allBlogs", async (req, res) => {
+    app.post("/allBlogs", verifyToken, async (req, res) => {
       const data = req.body;
       const result = await allBlogsCollection.insertOne(data);
       res.send(result);
     });
 
     // post Wishlist blogs
-    app.post("/wishlistBlogs", async (req, res) => {
+    app.post("/wishlistBlogs",  async (req, res) => {
       const blogs = req.body;
       const result = await wishlistCollection.insertOne(blogs);
       res.send(result);
