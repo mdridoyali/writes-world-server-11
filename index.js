@@ -11,6 +11,7 @@ const port = process.env.PORT || 5000;
 app.use(
   cors({
     origin: [
+      "http://localhost:5174",
       "http://localhost:5173",
       "https://ass-11-jwt.web.app",
       "https://ass-11-jwt.firebaseapp.com",
@@ -177,32 +178,24 @@ async function run() {
       res.send(result);
     });
 
-    // for featured Post / allBlogsCollection
-    app.get("/tenBlogs", async (req, res) => {
-      // options = {
-      //   projection: {
-      //     title: 1,
-      //     photoURL: 1,
-      //     displayName: 1,
-      //     long_desc: 1,
-      //     _id: 0,
-      //   },
-      // };
-      const result = await allBlogsCollection
-        .find()
-        .project({
-          title: 1,
-          photoURL: 1,
-          displayName: 1,
-          long_desc: 1,
-          _id: 0,
-        })
-        .sort({ long_desc: -1 })
-        .limit(10)
-        .toArray();
-      res.send(result);
-    });
 
+// for featured Post / allBlogsCollection
+    app.get("/tenBlogs", async (req, res) => {
+        const result = await allBlogsCollection
+          .find()
+          .project({
+            title: 1,
+            photoURL: 1,
+            displayName: 1,
+            long_desc: 1,
+            _id: 1,
+          })
+          .toArray();
+        const sortedResult = result.sort((a, b) => b.long_desc.length - a.long_desc.length );
+        const sliceResult = sortedResult.slice(0, 10);
+        res.send(sliceResult);
+    });
+    
     // for all blog page / allBlogsCollection
     app.get("/allBlogs", async (req, res) => {
       const title = req.query.title || "";
@@ -239,8 +232,9 @@ async function run() {
     });
 
     // post all blogs
-    app.post("/allBlogs", verifyToken, async (req, res) => {
+    app.post("/allBlogs",  async (req, res) => {
       const data = req.body;
+      console.log(data)
       const result = await allBlogsCollection.insertOne(data);
       res.send(result);
     });
